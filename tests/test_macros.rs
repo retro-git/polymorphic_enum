@@ -1,23 +1,26 @@
 use polymorphic_enum::polymorphic_enum;
 
-polymorphic_enum!(
-    trait Move {
-        fn execute(&self);
-        fn valid_for_state(&self, state: u8) -> bool;
-    }
+polymorphic_enum!
+(
 
-    #[derive(Clone)]
-    enum Moves {
-        Attack { card_id: u32, attack_power: u32, name: String },
-        Defend,
-        Test(u32, String)
-    }
+trait Move {
+    fn execute(&self);
+    fn valid_for_state(&self, state: u8) -> bool;
+}
+
+#[derive(Debug, Clone)]
+enum Moves {
+    Attack { card_id: u32, test_id: u32 },
+    Defend,
+    Test(u32, String)
+}
+
 );
 
 impl Move for Attack {
     fn execute(&self) {
         println!("Attack!");
-        println!("{}", self.name);
+        println!("{}", self.card_id);
     }
 
     fn valid_for_state(&self, state: u8) -> bool {
@@ -49,14 +52,16 @@ impl Move for Test {
 fn test_macro() {
     let attack: Moves = Attack {
         card_id: 0,
-        attack_power: 0,
-        name: String::from("Test"),
+        test_id: 1,
     }.into();
 
-    // Convert attack back into an Attack.
-    let attack2 = attack.clone();
-    attack.execute();
+    // Attack card_id can range from 0 to 5. Test_id can range from 0 to 10. Generate all possible combinations in functional style.
+    let moves: Vec<Moves> = (0..5).flat_map(|card_id| (0..10).map(move |test_id| Attack { card_id, test_id }.into())).collect(); // Move is necessary to capture card_id
 
+    // Debug print all
+    println!("{:#?}", moves);
+    // Print array length
+    println!("{}", moves.len());
 
     assert!(false);
 }
