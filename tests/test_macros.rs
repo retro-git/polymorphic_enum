@@ -1,4 +1,5 @@
 use polymorphic_enum::polymorphic_enum;
+use itertools::iproduct;
 
 polymorphic_enum!
 (
@@ -56,7 +57,10 @@ fn test_macro() {
     }.into();
 
     // Attack card_id can range from 0 to 5. Test_id can range from 0 to 10. Generate all possible combinations in functional style.
-    let moves: Vec<Moves> = (0..5).flat_map(|card_id| (0..10).map(move |test_id| Attack { card_id, test_id }.into())).collect(); // Move is necessary to capture card_id
+    let moves: Vec<Moves> = (0..5).flat_map(|card_id| (0..10).map(move |test_id| Attack { card_id, test_id }.into())).collect();
+
+    // Same as above, but with itertools iproduct
+    let moves: Vec<Moves> = iproduct!(0..5, 0..10).map(|(card_id, test_id)| Attack { card_id, test_id }.into()).collect();
 
     // Debug print all
     println!("{:#?}", moves);
