@@ -76,8 +76,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
                 }
             },
             syn::Fields::Unnamed(fields) => {
-                let fields = fields.unnamed.iter().enumerate().map(|(i, field)| {
-                    let field_name = syn::Ident::new(&format!("field{}", i), proc_macro2::Span::call_site());
+                let fields = fields.unnamed.iter().enumerate().map(|(_, field)| {
                     let field_type = &field.ty;
                     quote::quote! {
                         #field_type
@@ -103,7 +102,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         }
     });
 
-    // Map each enum variant to a variant with a single unnamed field of the same type as the struct with the same name.
+    // Map each enum variant to a variant with a single unnamed field, the struct with the same name.
     let variants = enum_item.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
         quote::quote! {
@@ -111,6 +110,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         }
     });
 
+    // Get the identifier of each enum variant only.
     let variant_idents = enum_item.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
         quote::quote! {
@@ -122,24 +122,13 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
 
     let enum_name = &enum_item.ident;
 
-    let variants2 = variants.clone();
-    // Implement the trait for the enum. For each trait method, match on the enum variant and call the method on the struct.
+    // Implement the trait for the enum. For each trait method, match on the enum variant and call the method on the underlying struct.
     let trait_methods = trait_item.items.iter().map(|item| {
-        let variants2 = variants2.clone();
         let variant_idents = variant_idents.clone();
         match item {
             syn::TraitItem::Fn(method) => {
                 let method_name = &method.sig.ident;
                 let method_inputs = &method.sig.inputs;
-                // Filter the inputs to remove the `&self` parameter
-                // let method_inputs_self_removed = method_inputs.iter().filter_map(|input| {
-                //     match input {
-                //         syn::FnArg::Receiver(_) => None,
-                //         syn::FnArg::Typed(pat_type) => Some(syn::FnArg::Typed(pat_type.clone())),
-                //     }
-                // }).collect::<Vec<_>>();
-                // //convert method_inputs back to Punctuated<FnArg, Comma>
-                // let method_inputs_self_removed: Punctuated<FnArg, Token![,]> = method_inputs_self_removed.clone().into_iter().collect();
                 let method_inputs_self_removed = method_inputs.clone().into_iter().filter_map(|input| {
                     match input {
                         syn::FnArg::Receiver(_) => None,
@@ -196,13 +185,5 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         }
     };
 
-
-    // print the output to stdout for debugging
-    dbg!("OUTPUT:");    
-    dbg!(output.to_string());
-
     output.into()
-
-
-    // TokenStream::new()
 }
