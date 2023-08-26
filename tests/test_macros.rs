@@ -8,11 +8,8 @@ polymorphic_enum!(
 
     #[derive(Clone)]
     enum Moves {
-        #[derive(Clone)]
         Attack { card_id: u32, attack_power: u32, name: String },
-        #[derive(Clone)]
         Defend,
-        #[derive(Clone)]
         Test(u32, String)
     }
 );

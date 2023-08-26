@@ -92,19 +92,19 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         };
         match &variant.fields {
             syn::Fields::Named(_) => quote::quote! {
-                #(#variant_attrs)*
+                #(#enum_attrs)*
                 struct #variant_name {
                     #fields
                 }
             },
             syn::Fields::Unnamed(_) => quote::quote! {
-                #(#variant_attrs)*
+                #(#enum_attrs)*
                 struct #variant_name (
                     #fields
                 );
             },
             syn::Fields::Unit => quote::quote! {
-                #(#variant_attrs)*
+                #(#enum_attrs)*
                 struct #variant_name;
             },
         }
@@ -222,7 +222,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
     let output = quote::quote! {
         #(#trait_attrs)*
         #trait_item
-        
+
         #(#structs)*
 
         #(#enum_attrs)*
