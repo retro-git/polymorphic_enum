@@ -137,6 +137,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
             syn::TraitItem::Fn(method) => {
                 let method_name = &method.sig.ident;
                 let method_inputs = &method.sig.inputs;
+                let method_attrs = &method.attrs;
                 let method_inputs_self_removed = method_inputs.clone().into_iter().filter_map(|input| {
                     match input {
                         syn::FnArg::Receiver(_) => None,
@@ -169,6 +170,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
                     },
                 };
                 quote::quote! {
+                    #(#method_attrs)*
                     fn #method_name(#method_inputs) #method_output {
                         #method_body
                     }
