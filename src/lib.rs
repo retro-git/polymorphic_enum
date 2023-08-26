@@ -1,47 +1,12 @@
-// //INPUT EXAMPLE:
-// polymorphic_enum!(trait Move {
-//     fn execute(&mut self);
-//     fn valid_for_state(&self, state: u8) -> bool;
-// }
-
-// enum Moves {
-//     Attack { card_id: u32, attack_power: u32, name: String },
-//     Defend,
-// })
-
-// //OUTPUT EXAMPLE:
-// struct Attack {
-//     card_id: u32,
-//     attack_power: u32,
-//     name: String,
-// }
-
-// struct Defend;
-
-// enum Moves {
-//     Attack(Attack),
-//     Defend(Defend),
-// }
-
-// impl Move for Moves {
-//     fn execute(&self) {
-//         match self {
-//             Moves::Attack(inner) => inner.execute(),
-//             Moves::Defend(inner) => inner.execute(),
-//         }
-//     }
-
-//     fn valid_for_state(&self, state: u8) -> bool {
-//         match self {
-//             Moves::Attack(inner) => inner.valid_for_state(state),
-//             Moves::Defend(inner) => inner.valid_for_state(state),
-//         }
-//     }
-// }
-
 use proc_macro::TokenStream;
 use syn::{FnArg, Token, punctuated::Punctuated};
 
+/*
+    Automatically generate a struct for each variant of an enum. Convert the enum such that each variant holds an instance of its corresponding struct.
+    Implement a given trait on the newly generated enum. For each trait method, match on the enum variant and call the method on the underlying struct.
+    Implement From and Into for each enum variant/struct pair.
+    Generate a declarative macro that is named the lowercase of the enum name. It is the same as vec!, but automatically calls .into() on each element.
+*/
 #[proc_macro]
 pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
     // This functional-style macro expects a trait definition, followed by an enum definition. Parse them.
@@ -61,11 +26,9 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
     // Map each enum variant to a struct with the same name, containing the variant's fields. If the variant's fields are named, the struct's fields are named the same. If the variant's fields are unnamed, the struct's fields unnamed.
     let structs = enum_item.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
-        let variant_attrs = &variant.attrs;
-        let mut named = false;
+        // let variant_attrs = &variant.attrs;
         let fields = match &variant.fields {
             syn::Fields::Named(fields) => {
-                named = true;
                 let fields = fields.named.iter().map(|field| {
                     let field_name = &field.ident;
                     let field_type = &field.ty;
@@ -118,15 +81,13 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         }
     });
 
-    // Get the identifier of each enum variant only.
+    // Get the identifier only of each enum variant.
     let variant_idents = enum_item.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
         quote::quote! {
             #variant_name
         }
     });
-
-    dbg!(&enum_item.ident);
 
     let enum_name = &enum_item.ident;
 
@@ -138,14 +99,16 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
                 let method_name = &method.sig.ident;
                 let method_inputs = &method.sig.inputs;
                 let method_attrs = &method.attrs;
-                let method_inputs_self_removed = method_inputs.clone().into_iter().filter_map(|input| {
+
+                // Remove the self parameter from the method inputs.
+                let method_inputs_self_and_types_removed = method_inputs.clone().into_iter().filter_map(|input| {
                     match input {
                         syn::FnArg::Receiver(_) => None,
                         syn::FnArg::Typed(pat_type) => Some(syn::FnArg::Typed(pat_type.clone())),
                     }
                 }).collect::<Punctuated<FnArg, Token![,]>>();
-                // Turn method_inputs_self_removed into Punctuated<
-                let method_inputs_self_removed: Punctuated<syn::Ident, Token![,]> = method_inputs_self_removed.clone().into_iter().map(|input| {
+                // Get the identifier only of each method input, removing the type.
+                let method_inputs_self_and_types_removed: Punctuated<syn::Ident, Token![,]> = method_inputs_self_and_types_removed.clone().into_iter().map(|input| {
                     match input {
                         syn::FnArg::Typed(pat_type) => {
                             match *pat_type.pat {
@@ -156,16 +119,17 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
                         _ => panic!("Expected a FnArg::Typed."),
                     }
                 }).collect::<Punctuated<syn::Ident, Token![,]>>();
+
                 let method_output = &method.sig.output;
                 let method_body = match method_output {
                     syn::ReturnType::Default => quote::quote! {
                         match self {
-                            #(#enum_name::#variant_idents(inner) => inner.#method_name(#method_inputs_self_removed),)*
+                            #(#enum_name::#variant_idents(inner) => inner.#method_name(#method_inputs_self_and_types_removed),)*
                         }
                     },
                     syn::ReturnType::Type(_, _) => quote::quote! {
                         match self {
-                            #(#enum_name::#variant_idents(inner) => inner.#method_name(#method_inputs_self_removed),)*
+                            #(#enum_name::#variant_idents(inner) => inner.#method_name(#method_inputs_self_and_types_removed),)*
                         }
                     },
                 };
@@ -180,7 +144,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         }
     });
 
-    // Automatically implement From and Into for each enum variant/struct pair.
+    // Implement From and Into for each enum variant/struct pair.
     let from_impls = enum_item.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
         let variant_name_lower = syn::Ident::new(&variant_name.to_string().to_lowercase(), variant_name.span());
@@ -221,6 +185,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
 
     let trait_name = &trait_item.ident;
 
+    // Generate the output.
     let output = quote::quote! {
         #(#trait_attrs)*
         #trait_item
@@ -241,9 +206,6 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
 
         #declarative_macro
     };
-
-    dbg!("OUTPUT:");
-    dbg!(&output.to_string());
 
     output.into()
 }
