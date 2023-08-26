@@ -46,20 +46,22 @@ use syn::{FnArg, Token, punctuated::Punctuated};
 pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
     // This functional-style macro expects a trait definition, followed by an enum definition. Parse them.
     let input = syn::parse_macro_input!(input as syn::File);
-    let trait_item = match &input.items[0] {
-        syn::Item::Trait(trait_item) => trait_item,
+
+    let (trait_item, trait_attrs) = match &input.items[0] {
+        syn::Item::Trait(trait_item) => (trait_item, &trait_item.attrs),
         _ => panic!("Expected a trait definition as the first item."),
     };
 
-    // The second item is the enum definition.
-    let enum_item = match &input.items[1] {
-        syn::Item::Enum(enum_item) => enum_item,
+    // The second item is the enum definition. Parse it along with any attributes it may have.
+    let (enum_item, enum_attrs) = match &input.items[1] {
+        syn::Item::Enum(enum_item) => (enum_item, &enum_item.attrs),
         _ => panic!("Expected an enum definition as the second item."),
     };
 
     // Map each enum variant to a struct with the same name, containing the variant's fields. If the variant's fields are named, the struct's fields are named the same. If the variant's fields are unnamed, the struct's fields unnamed.
     let structs = enum_item.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
+        let variant_attrs = &variant.attrs;
         let mut named = false;
         let fields = match &variant.fields {
             syn::Fields::Named(fields) => {
@@ -90,16 +92,19 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         };
         match &variant.fields {
             syn::Fields::Named(_) => quote::quote! {
+                #(#variant_attrs)*
                 struct #variant_name {
                     #fields
                 }
             },
             syn::Fields::Unnamed(_) => quote::quote! {
+                #(#variant_attrs)*
                 struct #variant_name (
                     #fields
                 );
             },
             syn::Fields::Unit => quote::quote! {
+                #(#variant_attrs)*
                 struct #variant_name;
             },
         }
@@ -215,9 +220,12 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
     let trait_name = &trait_item.ident;
 
     let output = quote::quote! {
+        #(#trait_attrs)*
         #trait_item
+        
         #(#structs)*
 
+        #(#enum_attrs)*
         enum #enum_name {
             #(#variants),*
         }

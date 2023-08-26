@@ -6,9 +6,13 @@ polymorphic_enum!(
         fn valid_for_state(&self, state: u8) -> bool;
     }
 
+    #[derive(Clone)]
     enum Moves {
+        #[derive(Clone)]
         Attack { card_id: u32, attack_power: u32, name: String },
+        #[derive(Clone)]
         Defend,
+        #[derive(Clone)]
         Test(u32, String)
     }
 );
@@ -16,6 +20,7 @@ polymorphic_enum!(
 impl Move for Attack {
     fn execute(&self) {
         println!("Attack!");
+        println!("{}", self.name);
     }
 
     fn valid_for_state(&self, state: u8) -> bool {
@@ -43,29 +48,18 @@ impl Move for Test {
     }
 }
 
-#[derive(Debug)]
-struct Larper;
-
 #[test]
 fn test_macro() {
-    let attack = Attack {
+    let attack: Moves = Attack {
         card_id: 0,
         attack_power: 0,
         name: String::from("Test"),
-    };
+    }.into();
 
-    let larp1 = Larper;
+    // Convert attack back into an Attack.
+    let attack2 = attack.clone();
+    attack.execute();
 
-    // debug print larper
-    println!("{:?}", larp1);
-
-    let test = Test(0, String::from("Test"));
-
-    let moves: Vec<Moves> = moves![attack, Defend, test];
-
-    for m in moves.iter() {
-        m.execute();
-    }
 
     assert!(false);
 }
