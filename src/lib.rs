@@ -170,6 +170,45 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         }
     });
 
+    // Automatically implement From and Into for each enum variant/struct pair.
+    let from_impls = enum_item.variants.iter().map(|variant| {
+        let variant_name = &variant.ident;
+        let variant_name_lower = syn::Ident::new(&variant_name.to_string().to_lowercase(), variant_name.span());
+        let struct_name = &variant.ident;
+        quote::quote! {
+            impl From<#struct_name> for #enum_name {
+                fn from(#variant_name_lower: #struct_name) -> Self {
+                    #enum_name::#variant_name(#variant_name_lower)
+                }
+            }
+        }
+    });
+
+    let into_impls = enum_item.variants.iter().map(|variant| {
+        let variant_name = &variant.ident;
+        // Make variant_name all lowercase.
+        let variant_name_lower = syn::Ident::new(&variant_name.to_string().to_lowercase(), variant_name.span());
+        let struct_name = &variant.ident;
+        quote::quote! {
+            impl Into<#struct_name> for #enum_name {
+                fn into(self) -> #struct_name {
+                    match self {
+                        #enum_name::#variant_name(#variant_name_lower) => #variant_name_lower,
+                        _ => panic!(concat!("Cannot convert ", stringify!(#enum_name), " to ", stringify!(#struct_name))),
+                    }
+                }
+            }
+        }
+    });
+
+    // Generate a declarative macro that is named the lowercase of the enum name. It is the same as vec!, but automatically calls .into() on each element.
+    let declarative_macro_name = syn::Ident::new(&enum_name.to_string().to_lowercase(), enum_name.span());
+    let declarative_macro = quote::quote! {
+        macro_rules! #declarative_macro_name {
+            ($($x:expr),*) => (vec![$($x.into()),*]);
+        }
+    };
+
     let trait_name = &trait_item.ident;
 
     let output = quote::quote! {
@@ -183,7 +222,15 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
         impl #trait_name for #enum_name {
             #(#trait_methods)*
         }
+
+        #(#from_impls)*
+        #(#into_impls)*
+
+        #declarative_macro
     };
+
+    dbg!("OUTPUT:");
+    dbg!(&output.to_string());
 
     output.into()
 }

@@ -45,17 +45,15 @@ impl Move for Test {
 
 #[test]
 fn test_macro() {
-    let attack = Moves::Attack(Attack {
+    let attack = Attack {
         card_id: 0,
         attack_power: 0,
-        name: String::from(""),
-    });
+        name: String::from("Test"),
+    };
 
-    let defend = Moves::Defend(Defend{});
+    let test = Test(0, String::from("Test"));
 
-    let test = Moves::Test(Test(0, String::from("")));
-
-    let moves = vec![attack, defend, test];
+    let moves: Vec<Moves> = moves![attack, Defend{}, test];
 
     for m in moves.iter() {
         m.execute();
