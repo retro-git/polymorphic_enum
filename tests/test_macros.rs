@@ -43,6 +43,9 @@ impl Move for Test {
     }
 }
 
+#[derive(Debug)]
+struct Larper;
+
 #[test]
 fn test_macro() {
     let attack = Attack {
@@ -51,9 +54,14 @@ fn test_macro() {
         name: String::from("Test"),
     };
 
+    let larp1 = Larper;
+
+    // debug print larper
+    println!("{:?}", larp1);
+
     let test = Test(0, String::from("Test"));
 
-    let moves: Vec<Moves> = moves![attack, Defend{}, test];
+    let moves: Vec<Moves> = moves![attack, Defend, test];
 
     for m in moves.iter() {
         m.execute();

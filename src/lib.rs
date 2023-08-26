@@ -88,17 +88,20 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
             },
             syn::Fields::Unit => quote::quote! {},
         };
-        match named {
-            true => quote::quote! {
+        match &variant.fields {
+            syn::Fields::Named(_) => quote::quote! {
                 struct #variant_name {
                     #fields
                 }
             },
-            false => quote::quote! {
+            syn::Fields::Unnamed(_) => quote::quote! {
                 struct #variant_name (
                     #fields
                 );
-            }
+            },
+            syn::Fields::Unit => quote::quote! {
+                struct #variant_name;
+            },
         }
     });
 
