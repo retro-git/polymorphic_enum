@@ -1,7 +1,6 @@
 use polymorphic_enum::polymorphic_enum;
 
 polymorphic_enum!(
-
     trait Move {
         fn execute(&self);
         fn valid_for_state(&self, state: u8) -> bool;
@@ -9,11 +8,9 @@ polymorphic_enum!(
 
     #[derive(Debug, Clone)]
     enum Moves {
-        Attack { card_id: u32, test_id: u32 },
+        Attack { enemy_id: u32 },
         Defend,
-        Test(u32, String)
     }
-    
 );
 
 impl Move for Attack {
@@ -36,23 +33,12 @@ impl Move for Defend {
     }
 }
 
-impl Move for Test {
-    fn execute(&self) {
-        println!("Test!");
-    }
-
-    fn valid_for_state(&self, state: u8) -> bool {
-        state == 2
-    }
-}
-
 #[test]
 fn test_macro() {
     // Create a vector of Moves
     let moves: Vec<Moves> = moves! {
-        Attack { card_id: 1, test_id: 2 },
-        Defend,
-        Test(1, "test".to_string())
+        Attack { enemy_id: 1 },
+        Defend
     };
 
     for m in moves {
