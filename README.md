@@ -100,3 +100,15 @@ impl Move for Defend {
     }
 }
 ```
+
+Then we can do something like this:
+```rust
+fn test_moves() {
+    // Create a list of Moves
+    let moves: Vec<Moves> = vec![Attack { enemy_id: 1 }.into(), Defend.into()];
+
+    for m in moves {
+        m.execute(); // Prints "Attack!" and "Defend!"
+    }
+}
+```
