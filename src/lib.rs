@@ -168,7 +168,7 @@ pub fn polymorphic_enum(input: TokenStream) -> TokenStream {
                 fn into(self) -> #struct_name {
                     match self {
                         #enum_name::#variant_name(#variant_name_lower) => #variant_name_lower,
-                        _ => panic!(concat!("Cannot convert ", stringify!(#enum_name), " to ", stringify!(#struct_name))),
+                        _ => panic!("Tried to convert a {} into a {} but the enum variant was not {}", stringify!(#enum_name), stringify!(#struct_name), stringify!(#variant_name)),
                     }
                 }
             }

@@ -1,5 +1,4 @@
 use polymorphic_enum::polymorphic_enum;
-use itertools::iproduct;
 
 polymorphic_enum!(
 
