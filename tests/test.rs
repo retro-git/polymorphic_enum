@@ -1,21 +1,20 @@
 use polymorphic_enum::polymorphic_enum;
 use itertools::iproduct;
 
-polymorphic_enum!
-(
+polymorphic_enum!(
 
-trait Move {
-    fn execute(&self);
-    fn valid_for_state(&self, state: u8) -> bool;
-}
+    trait Move {
+        fn execute(&self);
+        fn valid_for_state(&self, state: u8) -> bool;
+    }
 
-#[derive(Debug, Clone)]
-enum Moves {
-    Attack { card_id: u32, test_id: u32 },
-    Defend,
-    Test(u32, String)
-}
-
+    #[derive(Debug, Clone)]
+    enum Moves {
+        Attack { card_id: u32, test_id: u32 },
+        Defend,
+        Test(u32, String)
+    }
+    
 );
 
 impl Move for Attack {
