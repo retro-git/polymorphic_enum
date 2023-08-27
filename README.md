@@ -26,9 +26,12 @@ trait Move {
     fn valid_for_state(&self, state: u8) -> bool;
 }
 
+#[derive(Debug, Clone)]
 struct Attack{ enemy_id: u32 }
+#[derive(Debug, Clone)]
 struct Defend;
 
+#[derive(Debug, Clone)]
 enum Moves {
     Attack(Attack),
     Defend(Defend)

@@ -1,6 +1,6 @@
 [package]
 name = "polymorphic_enum"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 license = "LGPL-3.0"
 description = "Automatically wrap enum variant data in a struct. Implement a given trait for the enum that delegates to the structs. Also implement From and To to convert between the enum and the structs."
