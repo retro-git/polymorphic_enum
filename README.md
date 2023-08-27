@@ -77,3 +77,26 @@ impl Into<Defend> for Moves {
     }
 }
 ```
+
+You are now expected to implement the trait for each of the generated structs like so:
+```rust
+impl Move for Attack {
+    fn execute(&self) {
+        println!("Attack!");
+    }
+
+    fn valid_for_state(&self, state: u8) -> bool {
+        state == 0
+    }
+}
+
+impl Move for Defend {
+    fn execute(&self) {
+        println!("Defend!");
+    }
+
+    fn valid_for_state(&self, state: u8) -> bool {
+        state == 1
+    }
+}
+```

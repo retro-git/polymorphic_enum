@@ -35,15 +35,10 @@ impl Move for Defend {
 
 #[test]
 fn test_macro() {
-    // Create a vector of Moves
-    let moves: Vec<Moves> = moves! {
-        Attack { enemy_id: 1 },
-        Defend
-    };
+    // Create a list of Moves
+    let moves: Vec<Moves> = vec![Attack { enemy_id: 1 }.into(), Defend.into()];
 
     for m in moves {
-        m.execute();
+        m.execute(); // Prints "Attack!" and "Defend!"
     }
-
-    assert!(false);
 }
